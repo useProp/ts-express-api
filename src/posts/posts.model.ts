@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import Post from './post.interface';
 
 const postSchema = new mongoose.Schema({
-  author: String,
+  authorId: String,
   title: String,
   content: String,
 });

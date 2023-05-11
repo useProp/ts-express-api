@@ -6,6 +6,7 @@ import PostNotFoundException from '../exceptions/PostNotFound.exception';
 import validationMiddleware from '../middlewares/validation.middleware';
 import CreatePostDto from './post.dto';
 import authMiddleware from '../middlewares/auth.middleware';
+import RequestWithUser from '../interfaces/requestWithUser.interface';
 
 class PostsController implements Controller {
   public path = '/posts';
@@ -57,9 +58,12 @@ class PostsController implements Controller {
       });
   }
 
-  private createAPost = (req: Request, res: Response) => {
+  private createAPost = (req: RequestWithUser, res: Response) => {
     const postData: Post = req.body;
-    const createdPost = new this.post(postData);
+    const createdPost = new this.post({
+      ...postData,
+      authorId: req.user._id,
+    });
     createdPost
       .save()
       .then(post => res.json(post));
