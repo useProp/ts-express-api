@@ -4,6 +4,7 @@ import * as process from 'process';
 import errorMiddleware from './middlewares/error.middleware';
 import Controller from './interfaces/controller.interface';
 import * as cookieParser from 'cookie-parser';
+import loggerMiddleware from './middlewares/logger.middleware';
 
 class App {
   public app: express.Application;
@@ -20,6 +21,7 @@ class App {
   private initializeMiddlewares() {
     this.app.use(express.json());
     this.app.use(cookieParser());
+    this.app.use(loggerMiddleware)
   }
 
   private initializeErrorHandling() {
