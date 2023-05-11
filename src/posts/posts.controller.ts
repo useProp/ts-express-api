@@ -25,48 +25,46 @@ class PostsController implements Controller {
     this.router.delete(`${this.path}/:id`, this.deletePost);
   }
 
-  private getAllPosts = (req: Request, res: Response) => {
-    this.post
+  private getAllPosts = async (req: Request, res: Response) => {
+    const posts = await this.post
       .find()
-      .then(posts => res.json(posts));
+      .populate('author', 'name');
+    res.json({ posts });
   }
 
-  private getPostById = (req: Request, res: Response, next: NextFunction) => {
+  private getPostById = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    this.post
+    const post = await this.post
       .findById(id)
-      .then(post => {
-        if (post) {
-          return res.json(post);
-        }
-
-        next(new PostNotFoundException(id));
-      });
+      .populate('author', 'name');
+    if (!post) {
+      return next(new PostNotFoundException(id));
+    }
+    return res.json({ post });
   }
 
-  private modifyPost = (req: Request, res: Response, next: NextFunction) => {
+  private modifyPost = async (req: Request, res: Response, next: NextFunction) => {
     const postData = req.body;
     const { id } = req.params;
-    this.post
+    const post = await this.post
       .findByIdAndUpdate(id, postData, { new: true })
-      .then(post => {
-        if (post) {
-          return res.json(post);
-        }
-
-        next(new PostNotFoundException(id));
-      });
+      .populate('author', 'name');
+    if (!post) {
+      return next(new PostNotFoundException(id));
+    }
+    return res.json({ post });
   }
 
-  private createAPost = (req: RequestWithUser, res: Response) => {
+  private createAPost = async (req: RequestWithUser, res: Response) => {
     const postData: Post = req.body;
-    const createdPost = new this.post({
+    const post = await this.post.create({
       ...postData,
-      authorId: req.user._id,
+      author: req.user._id,
     });
-    createdPost
-      .save()
-      .then(post => res.json(post));
+
+    await post.populate('author', 'name');
+
+    res.json({ post });
   }
 
   private deletePost = (req: Request, res: Response, next: NextFunction) => {
