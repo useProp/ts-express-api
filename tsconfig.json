@@ -4,7 +4,8 @@
     "target": "ES2017",
     "outDir": "./dist",
     "baseUrl": "./src",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

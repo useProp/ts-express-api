@@ -1,9 +1,9 @@
-import PostsController from './posts/posts.controller';
 import * as express from 'express';
 import mongoose from 'mongoose';
 import * as process from 'process';
 import errorMiddleware from './middlewares/error.middleware';
 import Controller from './interfaces/controller.interface';
+import * as cookieParser from 'cookie-parser';
 
 class App {
   public app: express.Application;
@@ -19,6 +19,7 @@ class App {
 
   private initializeMiddlewares() {
     this.app.use(express.json());
+    this.app.use(cookieParser());
   }
 
   private initializeErrorHandling() {
