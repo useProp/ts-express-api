@@ -6,11 +6,18 @@ import HttpException from '../exceptions/HttpException';
 const validationMiddleware = <T>(type: any, skipMissingProperties = false): RequestHandler => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const errors: ValidationError[] = await validate(plainToInstance(type, req.body), { skipMissingProperties });
+      const errors: ValidationError[] = await validate(plainToInstance(type, req.body), {
+        skipMissingProperties,
+        forbidUnknownValues: false,
+      });
+
       if (errors.length <= 0) {
         return next();
       }
-      const message = errors.map((error: ValidationError) => Object.values(error.constraints)).join(', ');
+
+      const message = errors.map((error: ValidationError) => Object.values(
+        error?.constraints || error.children[0]?.constraints) || []
+      ).join(', ');
       return next(new HttpException(400, message));
     } catch (e) {
       console.log(e);
