@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import WrongAuthenticationTokenException from '../exceptions/WrongAuthenticationToken.exception';
 import * as jwt from 'jsonwebtoken';
-import userModel from '../users/user.model';
+import userModel from '../user/user.model';
 import DataStoredInToken from '../interfaces/dataStoredInToken.interface';
 import RequestWithUser from '../interfaces/requestWithUser.interface';
 

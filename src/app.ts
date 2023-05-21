@@ -1,10 +1,10 @@
 import * as express from 'express';
-import mongoose from 'mongoose';
 import * as process from 'process';
-import errorMiddleware from './middlewares/error.middleware';
+import errorMiddleware from './middleware/error.middleware';
 import Controller from './interfaces/controller.interface';
 import * as cookieParser from 'cookie-parser';
-import loggerMiddleware from './middlewares/logger.middleware';
+import loggerMiddleware from './middleware/logger.middleware';
+import PgDataSource from './pg-data-source';
 
 class App {
   public app: express.Application;
@@ -12,10 +12,12 @@ class App {
   constructor(controllers: Controller[]) {
     this.app = express();
 
-    this.connectToDatabase();
-    this.initializeMiddlewares();
-    this.initializeControllers(controllers);
-    this.initializeErrorHandling();
+    this.connectToDatabase().then(() => {
+      this.initializeMiddlewares();
+      this.initializeControllers(controllers);
+      this.initializeErrorHandling();
+      this.listen();
+    });
   }
 
   private initializeMiddlewares() {
@@ -35,15 +37,17 @@ class App {
   }
 
   private async connectToDatabase() {
-    const {
-      MONGO_USER,
-      MONGO_PASSWORD,
-      MONGO_PATH,
-    } = process.env;
-    await mongoose.connect(`mongodb+srv://${MONGO_USER}:${MONGO_PASSWORD}${MONGO_PATH}`);
+    try {
+      await PgDataSource.initialize();
+      console.log('Database connected');
+    } catch (e) {
+      console.log(e);
+      process.exit(1);
+    }
   }
 
   public listen() {
+    console.log('try to listen')
     this.app.listen(process.env.PORT, () => {
       console.log(`Server running on port ${process.env.PORT}`);
     });

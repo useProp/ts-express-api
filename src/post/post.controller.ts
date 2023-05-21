@@ -1,17 +1,18 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Post from './post.interface';
 import Controller from '../interfaces/controller.interface';
-import postModel from './posts.model';
+import postEntity from './post.entity';
 import PostNotFoundException from '../exceptions/PostNotFound.exception';
-import validationMiddleware from '../middlewares/validation.middleware';
+import validationMiddleware from '../middleware/validation.middleware';
 import CreatePostDto from './post.dto';
-import authMiddleware from '../middlewares/auth.middleware';
+import authMiddleware from '../middleware/auth.middleware';
 import RequestWithUser from '../interfaces/requestWithUser.interface';
+import PgDataSource from '../pg-data-source';
 
-class PostsController implements Controller {
+class PostController implements Controller {
   public path = '/posts';
   public router = Router();
-  private post = postModel;
+  private postRepo = PgDataSource.getRepository(postEntity);
 
   constructor() {
     this.initializeRoutes();
@@ -20,23 +21,19 @@ class PostsController implements Controller {
   public initializeRoutes = () => {
     this.router.get(this.path, this.getAllPosts);
     this.router.get(`${this.path}/:id`, this.getPostById);
-    this.router.post(this.path, authMiddleware, validationMiddleware(CreatePostDto), this.createAPost);
+    this.router.post(this.path, validationMiddleware(CreatePostDto), this.createAPost);
     this.router.patch(`${this.path}/:id`, validationMiddleware(CreatePostDto, true), this.modifyPost);
     this.router.delete(`${this.path}/:id`, this.deletePost);
   }
 
   private getAllPosts = async (req: Request, res: Response) => {
-    const posts = await this.post
-      .find()
-      .populate('author', 'name');
+    const posts = await this.postRepo.find();
     res.json({ posts });
   }
 
   private getPostById = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const post = await this.post
-      .findById(id)
-      .populate('author', 'name');
+    const post = await this.postRepo.findOneBy({ id: Number(id) });
     if (!post) {
       return next(new PostNotFoundException(id));
     }
@@ -44,41 +41,31 @@ class PostsController implements Controller {
   }
 
   private modifyPost = async (req: Request, res: Response, next: NextFunction) => {
-    const postData = req.body;
+    const postData: CreatePostDto = req.body;
     const { id } = req.params;
-    const post = await this.post
-      .findByIdAndUpdate(id, postData, { new: true })
-      .populate('author', 'name');
-    if (!post) {
+    await this.postRepo.update(id, postData);
+    const modifiedPost = await this.postRepo.findOneBy({ id: Number(id) });
+    if (!modifiedPost) {
       return next(new PostNotFoundException(id));
     }
-    return res.json({ post });
+    return res.json({ modifiedPost });
   }
 
   private createAPost = async (req: RequestWithUser, res: Response) => {
-    const postData: Post = req.body;
-    const post = await this.post.create({
-      ...postData,
-      author: req.user._id,
-    });
-
-    await post.populate('author', 'name');
-
-    res.json({ post });
+    const postData: CreatePostDto = req.body;
+    const newPost = this.postRepo.create(postData);
+    await this.postRepo.save(newPost);
+    res.json({ newPost });
   }
 
-  private deletePost = (req: Request, res: Response, next: NextFunction) => {
+  private deletePost = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    this.post
-      .findByIdAndDelete(id)
-      .then(success => {
-        if (success) {
-          return res.json(success);
-        }
-
-        next(new PostNotFoundException(id));
-      });
+    const deleteRecord = await this.postRepo.delete(Number(id));
+    if (deleteRecord.affected < 1) {
+      return next(new PostNotFoundException(id));
+    }
+    res.json({ message: `Post with id ${id} was deleted` });
   }
 }
 
-export default PostsController;
+export default PostController;
