@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { plainToInstance } from 'class-transformer';
 import { validate, ValidationError } from 'class-validator';
-import HttpException from '../exceptions/HttpException';
+import HttpException from '../exceptions/Http.exception';
 
 const validationMiddleware = <T>(type: any, skipMissingProperties = false): RequestHandler => {
   return async (req: Request, res: Response, next: NextFunction) => {
