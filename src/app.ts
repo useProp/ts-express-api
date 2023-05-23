@@ -3,7 +3,6 @@ import errorMiddleware from './middleware/error.middleware';
 import Controller from './interfaces/controller.interface';
 import * as cookieParser from 'cookie-parser';
 import loggerMiddleware from './middleware/logger.middleware';
-import PgDataSource from './pg-data-source';
 
 class App {
   public app: express.Application;
