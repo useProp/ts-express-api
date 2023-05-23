@@ -1,5 +1,4 @@
 import * as express from 'express';
-import * as process from 'process';
 import errorMiddleware from './middleware/error.middleware';
 import Controller from './interfaces/controller.interface';
 import * as cookieParser from 'cookie-parser';
@@ -12,12 +11,9 @@ class App {
   constructor(controllers: Controller[]) {
     this.app = express();
 
-    this.connectToDatabase().then(() => {
-      this.initializeMiddlewares();
-      this.initializeControllers(controllers);
-      this.initializeErrorHandling();
-      this.listen();
-    });
+    this.initializeMiddlewares();
+    this.initializeControllers(controllers);
+    this.initializeErrorHandling();
   }
 
   private initializeMiddlewares() {
@@ -36,14 +32,8 @@ class App {
     });
   }
 
-  private async connectToDatabase() {
-    try {
-      await PgDataSource.initialize();
-      console.log('Database connected');
-    } catch (e) {
-      console.log(e);
-      process.exit(1);
-    }
+  public getServer(): express.Application {
+    return this.app;
   }
 
   public listen() {
