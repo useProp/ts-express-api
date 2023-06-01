@@ -1,84 +1,75 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import Post from './post.entity';
 import Controller from '../interfaces/controller.interface';
-import PostNotFoundException from '../exceptions/PostNotFound.exception';
 import validationMiddleware from '../middleware/validation.middleware';
 import CreatePostDto from './post.dto';
 import authMiddleware from '../middleware/auth.middleware';
 import RequestWithUser from '../interfaces/requestWithUser.interface';
-import PgDataSource from '../pg-data-source';
+import PostService from './post.service';
 
 class PostController implements Controller {
   public path = '/posts';
   public router = Router();
-  private postRepo = PgDataSource.getRepository(Post);
-
+  private postService: PostService;
   constructor() {
     this.initializeRoutes();
+    this.postService = new PostService();
   }
 
   public initializeRoutes = () => {
     this.router.get(this.path, this.getAllPosts);
     this.router.get(`${this.path}/:id`, this.getPostById);
     this.router.post(this.path, authMiddleware, validationMiddleware(CreatePostDto), this.createAPost);
-    this.router.patch(`${this.path}/:id`, validationMiddleware(CreatePostDto, true), this.modifyPost);
+    this.router.patch(`${this.path}/:id`, authMiddleware, validationMiddleware(CreatePostDto, true), this.modifyPost);
     this.router.delete(`${this.path}/:id`, authMiddleware, this.deletePost);
   }
 
-  private getAllPosts = async (req: Request, res: Response) => {
-    const posts = await this.postRepo.find({
-      relations: ['categories'],
-    });
-    res.json({ posts });
+  private getAllPosts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const posts = await this.postService.getAllPosts();
+      res.json({ posts });
+    } catch (e) {
+      next(e);
+    }
   }
 
   private getPostById = async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const post = await this.postRepo.findOne({
-      where: {
-        id: Number(id),
-      },
-      relations: ['categories'],
-    });
-    if (!post) {
-      return next(new PostNotFoundException(id));
+    try {
+      const post = await this.postService.getOne(req.params.id);
+      return res.json({ post });
+    } catch (e) {
+      next(e);
     }
-    return res.json({ post });
   }
 
   private modifyPost = async (req: Request, res: Response, next: NextFunction) => {
-    const postData: CreatePostDto = req.body;
-    const { id } = req.params;
-    await this.postRepo.update(id, postData);
-    const modifiedPost = await this.postRepo.findOne({
-      where: {
-        id: Number(id),
-      },
-      relations: ['categories'],
-    });
-    if (!modifiedPost) {
-      return next(new PostNotFoundException(id));
+    try {
+      const modifiedPost = await this.postService.modifyPost(
+        req.params.id,
+        req.body,
+      );
+      return res.json({ modifiedPost });
+    } catch (e) {
+      next(e);
     }
-    return res.json({ modifiedPost });
   }
 
-  private createAPost = async (req: RequestWithUser, res: Response) => {
-    const postData: CreatePostDto = req.body;
-    const newPost = this.postRepo.create({
-      ...postData,
-      author: req.user,
-    });
-    await this.postRepo.save(newPost);
-    res.json({ newPost });
+  private createAPost = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const newPost = await this.postService.createPost(req.body);
+      res.json({ newPost });
+    } catch (e) {
+      next(e);
+    }
   }
 
   private deletePost = async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const deleteRecord = await this.postRepo.delete(Number(id));
-    if (deleteRecord.affected < 1) {
-      return next(new PostNotFoundException(id));
+    try {
+      const deletedItem = this.postService.deletePost(req.params.id);
+      res.json({ deletedItem });
+    } catch (e) {
+      next(e);
     }
-    res.json({ message: `Post with id ${id} was deleted` });
+
   }
 }
 

@@ -1,32 +1,33 @@
 import 'dotenv/config';
-import 'reflect-metadata';
 import App from './app';
 import PostController from './post/post.controller';
 import validateEnv from './utils/validateEnv';
-import AddressController from './address/address.controller';
 import AuthenticationController from './authentication/authentication.controller';
-import CategoryController from './category/category.controller';
-import PgDataSource from './pg-data-source';
+import mongoose from 'mongoose';
+import UserController from './user/user.controller';
 
 validateEnv();
 
+const app = new App(
+  [
+    new PostController(),
+    new UserController(),
+    new AuthenticationController(),
+  ]
+);
+
 const main = async () => {
   try {
-    await PgDataSource.initialize();
-    console.log('Database connected');
+    await mongoose.connect(
+      `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}${process.env.MONGO_PATH}`
+    );
+    console.log('Database connected')
+    app.listen();
   } catch (e) {
-    console.log('Server running error: ', e);
+    console.log('App initialization error');
+    console.log(e);
     process.exit(1);
   }
-  const app = new App(
-    [
-      new PostController(),
-      new AddressController(),
-      new AuthenticationController(),
-      new CategoryController(),
-    ]
-  );
-  app.listen();
 }
 
 main();

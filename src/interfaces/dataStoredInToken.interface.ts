@@ -1,5 +1,6 @@
 interface DataStoredInToken {
-  id: number;
+  id: string;
+  isTwoFactorAuthenticated: boolean;
 }
 
 export default DataStoredInToken;

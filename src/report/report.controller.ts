@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import Controller from '../interfaces/controller.interface';
-import userModel from '../users/user.model';
+import userModel from '../user/user.model';
 
 
 class ReportController implements Controller {
