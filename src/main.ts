@@ -1,13 +1,16 @@
+import 'dotenv/config';
 import App from './app';
 import PostsController from './posts/posts.controller';
+import validateEnv from './utils/validateEnv';
 
-const app = new App(
-  [new PostsController()],
-  5000,
-);
+validateEnv();
 
 const main = async () => {
   try {
+    const app = new App(
+      [new PostsController()],
+      Number(process.env.PORT) || 5000,
+    );
     app.listen();
   } catch (e) {
     console.log(e);

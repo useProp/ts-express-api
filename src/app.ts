@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 
 class App {
   public app: express.Application;
@@ -8,6 +9,7 @@ class App {
     this.app = express();
     this.port = port;
 
+    this.connectToTheDatabase().then(() => console.log('Database Connected'));
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
   }
@@ -20,6 +22,11 @@ class App {
     controllers.forEach((controller) => {
       this.app.use('/', controller.router);
     });
+  }
+
+  private async connectToTheDatabase() {
+    console.log(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}${process.env.MONGO_PATH}`)
+    await mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}${process.env.MONGO_PATH}`);
   }
 
   public listen() {

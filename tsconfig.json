@@ -3,7 +3,8 @@
     "outDir": "./dist",
     "baseUrl": "./src",
     "sourceMap": true,
-    "target": "ES2017"
+    "target": "ES2017",
+    "moduleResolution": "NodeNext"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
