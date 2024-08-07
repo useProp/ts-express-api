@@ -1,7 +1,11 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import Post from './post.interface';
 import postModel from './posts.model';
 import { Controller } from '../interfaces/controller.interface';
+import { HttpException } from '../exceptions/Http.exception';
+import { PostNotFoundException } from '../exceptions/PostNotFound.exception';
+import { validationMiddleware } from '../middleware/validation.middleware';
+import { CreatePostDto } from './createPost.dto';
 
 
 class PostsController implements Controller {
@@ -14,9 +18,9 @@ class PostsController implements Controller {
 
   private initializeRoutes(): void {
     this.router.get(this.path, this.getAllPosts);
-    this.router.post(this.path, this.createPost);
+    this.router.post(this.path, validationMiddleware(CreatePostDto), this.createPost);
     this.router.get(`${this.path}/:id`, this.getById);
-    this.router.patch(`${this.path}/:id`, this.updateOne);
+    this.router.patch(`${this.path}/:id`, validationMiddleware(CreatePostDto), this.updateOne);
     this.router.delete(`${this.path}/:id`, this.deleteOne);
   }
 
@@ -45,44 +49,60 @@ class PostsController implements Controller {
     }
   }
 
-  private getById = async (req: Request, res: Response) => {
+  private getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id;
       const post = await postModel.findById(id);
+
+      if (!post) {
+        next(new PostNotFoundException(id));
+        return;
+      }
+
       res.json({
         post,
       });
     } catch (e) {
       console.error('getById', e);
+      next(new HttpException(e?.message || 'Something went wrong', 500));
     }
   }
 
-  private updateOne = async (req: Request, res: Response) => {
+  private updateOne = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id;
       const postData: Post = req.body;
       const post = await postModel.findByIdAndUpdate(id, postData, { new: true, });
+
+      if (!post) {
+        next(new PostNotFoundException(id));
+        return;
+      }
+
       res.json({
         post,
       });
     } catch (e) {
       console.error('updateOne', e);
+      next(new HttpException(e?.message || 'Something went wrong', 500));
     }
   }
 
-  private deleteOne = async (req: Request, res: Response) => {
+  private deleteOne = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id;
       const response = await postModel.findByIdAndDelete(id);
+
+
       if (!response) {
-        res
-          .status(404)
-          .json({ message: 'Not Found', });
+        next(new PostNotFoundException(id));
         return;
       }
+
       res.json({ message: 'OK' });
     } catch (e) {
       console.log('deleteOne', e);
+      next(new HttpException(e?.message || 'Something went wrong', 500));
     }
   }
 }

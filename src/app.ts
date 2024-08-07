@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
+import { errorMiddleware } from './middleware/error.middleware';
 
 class App {
   public app: express.Application;
@@ -12,6 +13,7 @@ class App {
     this.connectToTheDatabase().then(() => console.log('Database Connected'));
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
+    this.initializeErrorHandling();
   }
 
   private initializeMiddlewares() {
@@ -25,8 +27,11 @@ class App {
   }
 
   private async connectToTheDatabase() {
-    console.log(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}${process.env.MONGO_PATH}`)
     await mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}${process.env.MONGO_PATH}`);
+  }
+
+  private initializeErrorHandling() {
+    this.app.use(errorMiddleware);
   }
 
   public listen() {
