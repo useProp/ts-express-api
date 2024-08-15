@@ -10,7 +10,7 @@ import { authMiddleware } from '../middleware/auth.middleware';
 import { RequestWithUser } from '../interfaces/requestWIthUser.interface';
 
 
-class PostsController implements Controller {
+class PostController implements Controller {
   public path: string = '/posts';
   public router: Router = Router();
   private post = postModel;
@@ -21,8 +21,8 @@ class PostsController implements Controller {
 
   private initializeRoutes(): void {
     this.router.get(this.path, this.getAllPosts);
-    this.router.post(this.path, authMiddleware, validationMiddleware(CreatePostDto), this.createPost);
     this.router.get(`${this.path}/:id`, this.getById);
+    this.router.post(this.path, authMiddleware, validationMiddleware(CreatePostDto), this.createPost);
     this.router.patch(`${this.path}/:id`, authMiddleware, validationMiddleware(PatchPostDto), this.updateOne);
     this.router.delete(`${this.path}/:id`, authMiddleware, this.deleteOne);
   }
@@ -44,7 +44,7 @@ class PostsController implements Controller {
       const postData: Post = req.body;
       const newPost = new this.post({
         ...postData,
-        authorId: req.user._id,
+        author: req.user._id,
       });
       const savedPost = await newPost.save();
       res.json({
@@ -113,4 +113,4 @@ class PostsController implements Controller {
   }
 }
 
-export default PostsController;
+export default PostController;
