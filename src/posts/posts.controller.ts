@@ -5,12 +5,15 @@ import { Controller } from '../interfaces/controller.interface';
 import { HttpException } from '../exceptions/Http.exception';
 import { PostNotFoundException } from '../exceptions/PostNotFound.exception';
 import { validationMiddleware } from '../middleware/validation.middleware';
-import { CreatePostDto } from './createPost.dto';
+import { CreatePostDto, PatchPostDto } from './post.dto';
+import { authMiddleware } from '../middleware/auth.middleware';
+import { RequestWithUser } from '../interfaces/requestWIthUser.interface';
 
 
 class PostsController implements Controller {
   public path: string = '/posts';
   public router: Router = Router();
+  private post = postModel;
 
   constructor() {
     this.initializeRoutes();
@@ -18,15 +21,15 @@ class PostsController implements Controller {
 
   private initializeRoutes(): void {
     this.router.get(this.path, this.getAllPosts);
-    this.router.post(this.path, validationMiddleware(CreatePostDto), this.createPost);
+    this.router.post(this.path, authMiddleware, validationMiddleware(CreatePostDto), this.createPost);
     this.router.get(`${this.path}/:id`, this.getById);
-    this.router.patch(`${this.path}/:id`, validationMiddleware(CreatePostDto), this.updateOne);
-    this.router.delete(`${this.path}/:id`, this.deleteOne);
+    this.router.patch(`${this.path}/:id`, authMiddleware, validationMiddleware(PatchPostDto), this.updateOne);
+    this.router.delete(`${this.path}/:id`, authMiddleware, this.deleteOne);
   }
 
   private getAllPosts = async (req: Request, res: Response) => {
     try {
-      const posts = await postModel.find();
+      const posts = await this.post.find();
       res.json({
         posts,
       });
@@ -36,10 +39,13 @@ class PostsController implements Controller {
 
   }
 
-  private createPost = async (req: Request, res: Response) => {
+  private createPost = async (req: RequestWithUser, res: Response) => {
     try {
       const postData: Post = req.body;
-      const newPost = new postModel(postData);
+      const newPost = new this.post({
+        ...postData,
+        authorId: req.user._id,
+      });
       const savedPost = await newPost.save();
       res.json({
         post: savedPost,
@@ -52,7 +58,7 @@ class PostsController implements Controller {
   private getById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id;
-      const post = await postModel.findById(id);
+      const post = await this.post.findById(id);
 
       if (!post) {
         next(new PostNotFoundException(id));
@@ -72,7 +78,7 @@ class PostsController implements Controller {
     try {
       const id = req.params.id;
       const postData: Post = req.body;
-      const post = await postModel.findByIdAndUpdate(id, postData, { new: true, });
+      const post = await this.post.findByIdAndUpdate(id, postData, { new: true, });
 
       if (!post) {
         next(new PostNotFoundException(id));
@@ -91,7 +97,7 @@ class PostsController implements Controller {
   private deleteOne = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id;
-      const response = await postModel.findByIdAndDelete(id);
+      const response = await this.post.findByIdAndDelete(id);
 
 
       if (!response) {

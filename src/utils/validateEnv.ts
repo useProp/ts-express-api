@@ -6,5 +6,6 @@ export default function validateEnv() {
     MONGO_PASSWORD: str(),
     MONGO_PATH: str(),
     PORT: port(),
+    JWT_SECRET: str(),
   });
 }

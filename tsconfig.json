@@ -6,6 +6,7 @@
     "target": "ES2017",
     "moduleResolution": "NodeNext",
     "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

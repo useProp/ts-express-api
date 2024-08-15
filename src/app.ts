@@ -1,12 +1,14 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { errorMiddleware } from './middleware/error.middleware';
+import * as cookieParser from 'cookie-parser';
+import { Controller } from './interfaces/controller.interface';
 
 class App {
   public app: express.Application;
   public port: number;
 
-  constructor(controllers, port: number) {
+  constructor(controllers: Controller[], port: number) {
     this.app = express();
     this.port = port;
 
@@ -18,9 +20,10 @@ class App {
 
   private initializeMiddlewares() {
     this.app.use(express.json());
+    this.app.use(cookieParser());
   }
 
-  private initializeControllers(controllers) {
+  private initializeControllers(controllers: Controller[]) {
     controllers.forEach((controller) => {
       this.app.use('/', controller.router);
     });
