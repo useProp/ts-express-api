@@ -7,6 +7,8 @@ dist
 # dotenv environment variables file
 .env
 
+docker.env
+
 # log files
 npm-debug.log*
 yarn-debug.log*

@@ -8,7 +8,7 @@ export class CreatePostDto {
   public content: string;
 }
 
-export class PatchPostDto {
+export class UpdatePostDto {
   @IsString()
   @IsOptional()
   public title?: string;

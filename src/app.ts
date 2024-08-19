@@ -1,9 +1,9 @@
 import * as express from 'express';
 import { Request, Response, NextFunction } from 'express'
-import * as mongoose from 'mongoose';
 import { errorMiddleware } from './middleware/error.middleware';
 import * as cookieParser from 'cookie-parser';
 import { Controller } from './interfaces/controller.interface';
+import { AppDataSource } from './data-source';
 
 class App {
   public app: express.Application;
@@ -25,7 +25,6 @@ class App {
   }
 
   private initializeControllers(controllers: Controller[]) {
-    // health check
     controllers.forEach((controller) => {
       this.app.use('/', controller.router);
     });
@@ -35,7 +34,7 @@ class App {
   }
 
   private async connectToTheDatabase() {
-    await mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}${process.env.MONGO_PATH}`);
+    await AppDataSource.initialize();
   }
 
   private initializeErrorHandling() {
