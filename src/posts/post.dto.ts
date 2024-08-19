@@ -1,4 +1,14 @@
-import { IsOptional, IsString } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested
+} from 'class-validator';
+
+export class CategoryInPostDto {
+  @IsNumber()
+  public id: number;
+}
 
 export class CreatePostDto {
   @IsString()
@@ -6,6 +16,9 @@ export class CreatePostDto {
 
   @IsString()
   public content: string;
+
+  @ValidateNested()
+  public categories: CategoryInPostDto[];
 }
 
 export class UpdatePostDto {

@@ -5,6 +5,8 @@ import { Post } from './posts.entity';
 import { HttpException } from '../exceptions/http.exception';
 import { validationMiddleware } from '../middleware/validation.middleware';
 import { CreatePostDto, UpdatePostDto } from './post.dto';
+import { RequestWithUser } from '../interfaces/requestWithUser.interface';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 
 class PostController implements Controller {
@@ -19,14 +21,14 @@ class PostController implements Controller {
   private initializeRoutes(): void {
     this.router.get(`${this.path}`, this.getAll);
     this.router.get(`${this.path}/:id`, this.getOne);
-    this.router.post(`${this.path}`, validationMiddleware(CreatePostDto), this.create);
-    this.router.patch(`${this.path}/:id`, validationMiddleware(UpdatePostDto), this.update);
-    this.router.delete(`${this.path}/:id`, this.delete);
+    this.router.post(`${this.path}`, authMiddleware, validationMiddleware(CreatePostDto), this.create);
+    this.router.patch(`${this.path}/:id`, authMiddleware, validationMiddleware(UpdatePostDto), this.update);
+    this.router.delete(`${this.path}/:id`, authMiddleware, validationMiddleware(UpdatePostDto), this.delete);
   }
 
   private getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const posts = await this.postsRepo.find();
+      const posts = await this.postsRepo.find({ relations: ['categories'] });
       res.json({ posts });
     } catch (e) {
       new HttpException();
@@ -36,7 +38,7 @@ class PostController implements Controller {
   private getOne = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const post = await this.postsRepo.findOne({ where: { id: Number(id) } });
+      const post = await this.postsRepo.findOne({ where: { id: Number(id) }, relations: ['categories'] });
       if (!post) {
         return next(new HttpException(404, 'Post not found'));
       }
@@ -46,10 +48,13 @@ class PostController implements Controller {
     }
   }
 
-  private create = async (req: Request, res: Response, next: NextFunction) => {
+  private create = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const postData = req.body;
-      const newPost = this.postsRepo.create(postData);
+      const postData: CreatePostDto = req.body;
+      const newPost = this.postsRepo.create({
+        ...postData,
+        author: req.user,
+      });
       await this.postsRepo.save(newPost);
       res.json({ newPost });
     } catch (e) {

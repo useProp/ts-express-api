@@ -3,6 +3,9 @@ import 'reflect-metadata';
 import App from './app';
 import validateEnv from './utils/validateEnv';
 import PostController from './posts/post.controller';
+import { AddressController } from './addresses/address.controller';
+import { AuthController } from './auth/auth.controller';
+import { CategoryController } from './categories/category.controller';
 
 validateEnv();
 
@@ -11,6 +14,9 @@ const main = async () => {
     const app = new App(
       [
         new PostController(),
+        new AddressController(),
+        new AuthController(),
+        new CategoryController(),
       ],
       Number(process.env.PORT) || 5000,
     );
