@@ -2,14 +2,14 @@ import { Controller } from '../interfaces/controller.interface';
 import { NextFunction, Router, Request, Response } from 'express';
 import postModel from '../posts/posts.model';
 import { ServerException } from '../exceptions/Server.exception';
-import { userModel } from './user.model';
+import { UserModel } from './user.model';
 import { UserNotFoundException } from '../exceptions/UserNotFound.exception';
 
 export class UserController implements Controller {
   public router = Router();
   public path = '/users';
   private post = postModel;
-  private user = userModel;
+  private user = UserModel;
 
   constructor() {
     this.initializeRoutes();

@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { Request, Response, NextFunction } from 'express'
 import * as mongoose from 'mongoose';
 import { errorMiddleware } from './middleware/error.middleware';
 import * as cookieParser from 'cookie-parser';
@@ -24,8 +25,12 @@ class App {
   }
 
   private initializeControllers(controllers: Controller[]) {
+    // health check
     controllers.forEach((controller) => {
       this.app.use('/', controller.router);
+    });
+    this.app.use('/health', (req: Request, res: Response, next: NextFunction) => {
+      res.json({ message: 'OK' });
     });
   }
 

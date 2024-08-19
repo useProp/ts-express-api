@@ -4,7 +4,7 @@ import { validationMiddleware } from '../middleware/validation.middleware';
 import { CreateUserDto } from '../users/user.dto';
 import { LoginDto } from './login.dto';
 import { User } from '../users/user.interface';
-import { userModel } from '../users/user.model';
+import { UserModel } from '../users/user.model';
 import { UserEmailOccupated } from '../exceptions/UserEmailOccupated.exception';
 import * as bcrypt from 'bcrypt';
 import { ServerException } from '../exceptions/Server.exception';
@@ -16,7 +16,7 @@ import { JwtSignException } from '../exceptions/JwtSignException.exception';
 export class AuthenticationController implements Controller {
   public router = Router();
   public path = '/auth';
-  private user = userModel;
+  private user = UserModel;
 
   constructor() {
     this.initializeRoutes();

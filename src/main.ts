@@ -6,6 +6,7 @@ import {
 } from './authentication/authentication.controller';
 import { UserController } from './users/user.controller';
 import PostController from './posts/post.controller';
+import { ReportController } from './reports/report.controller';
 
 validateEnv();
 
@@ -15,7 +16,8 @@ const main = async () => {
       [
         new PostController(),
         new AuthenticationController(),
-        new UserController()
+        new UserController(),
+        new ReportController(),
       ],
       Number(process.env.PORT) || 5000,
     );
