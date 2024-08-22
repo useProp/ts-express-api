@@ -6,15 +6,17 @@ import { HttpException } from '../exceptions/http.exception';
 import { validationMiddleware } from '../middleware/validation.middleware';
 import { LoginDto, RegisterDto } from './auth.dto';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
+import { AuthService } from './auth.service';
+import { Repository } from 'typeorm';
 
 
 export class AuthController implements Controller {
   public path = '/auth';
   public router = Router();
-  private usersRepo = AppDataSource.getRepository(User);
+  private authService: AuthService;
 
   constructor() {
+    this.authService = new AuthService();
     this.initializeRoutes();
   }
 
@@ -25,50 +27,20 @@ export class AuthController implements Controller {
 
   private login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, password } = req.body;
-
-      const foundUser = await this.usersRepo.findOne({ where: { email } });
-      if (!foundUser) {
-        return next(new HttpException(403, 'Wrong Credentials'));
-      }
-
-      const isPasswordValid = bcrypt.compare(password, foundUser.password);
-      if (!isPasswordValid) {
-        return next(new HttpException(403, 'Wrong Credentials'));
-      }
-
-      const token = this.generateToken({ id: foundUser.id });
-
-      res.json({ token });
-    } catch (e) {
-      next(new HttpException());
+      const token = await this.authService.login(req.body);
+      res.json(token);
+    } catch (e: any) {
+      next(new HttpException(e?.status, e?.message));
     }
   }
 
   private register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, email, password, ...rest } = req.body;
-
-      const foundUser = await this.usersRepo.findOne({ where: { email } });
-      if (foundUser) {
-        return next(new HttpException(400, 'Email already in use'));
-      }
-
-      const hashedPassword = bcrypt.hashSync(password, 10);
-      const newUser = this.usersRepo.create({ name, email, password: hashedPassword, ...rest });
-      await this.usersRepo.save(newUser);
-
-      // @ts-ignore
-      const token = this.generateToken({ id: newUser.id });
+      const { newUser, token } = await this.authService.register(req.body);
 
       res.json({ newUser, token });
     } catch (e) {
-      next(new HttpException());
+      next(new HttpException(e?.status, e?.message));
     }
-  }
-
-  private generateToken(payload: any): string {
-    const expiresIn = 60 * 60;
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
   }
 }
