@@ -21,6 +21,7 @@ export const authMiddleware = async (req: RequestWithUser, res: Response, next: 
       return next(new HttpException(403, 'Not authorized'));
     }
 
+
     delete foundUser.password;
     req.user = foundUser;
     next();

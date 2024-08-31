@@ -7,5 +7,6 @@ export default function validateEnv() {
     POSTGRES_DB: str(),
     PORT: port(),
     JWT_SECRET: str(),
+    TWO_FACTOR_APP_NAME: str(),
   });
 }

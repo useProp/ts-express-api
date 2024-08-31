@@ -23,3 +23,7 @@ export class LoginDto {
   @IsString()
   public password: string;
 }
+
+export class TwoFactorTokenDto {
+  token: string;
+}

@@ -6,6 +6,9 @@ import { LoginDto, RegisterDto } from './auth.dto';
 import * as jwt from 'jsonwebtoken';
 import { TokenData } from '../interfaces/tokenData.interface';
 import { Repository } from 'typeorm';
+import * as speakeasy from 'speakeasy';
+import * as qrcode from 'qrcode';
+import { Response } from 'express';
 
 export class AuthService {
   private usersRepo: Repository<User>;
@@ -47,9 +50,31 @@ export class AuthService {
     return { newUser, token, cookie };
   }
 
-  public generateToken = (payload: any): string => {
+  public generate2FACode() {
+    const { otpauth_url, base32 } = speakeasy.generateSecret({
+      name: process.env.TWO_FACTOR_APP_NAME,
+    });
+    return {
+      otpAuthUrl: otpauth_url,
+      base32,
+    }
+  }
+
+  public verify2FAToken(token: string, userSecret: string): boolean {
+    return speakeasy.totp.verify({
+      token,
+      secret: userSecret,
+      encoding: 'base32',
+    });
+  }
+
+  public respondWithQRCode(data: string, response: Response) {
+    qrcode.toFileStream(response, data);
+  }
+
+  public generateToken = (payload: any, is2FACompleted = false): string => {
     const expiresIn = 60 * 60;
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
+    return jwt.sign({ ...payload, is2FACompleted }, process.env.JWT_SECRET, { expiresIn });
   }
 
   public createCookie = (data: TokenData): string => {

@@ -23,6 +23,12 @@ export class User {
   @Column()
   public password: string;
 
+  @Column({ nullable: true })
+  public twoFactorAuthCode: string;
+
+  @Column({ default: false })
+  public isTwoFactorAuthEnabled: boolean;
+
   @OneToOne(() => Address, (address: Address) => address.user, {
     cascade: true,
     eager: true,

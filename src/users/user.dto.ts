@@ -1,5 +1,5 @@
 import { CreateAddressDto } from '../addresses/address.dto';
-import { IsString } from 'class-validator';
+import { IsString, ValidateNested } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -12,5 +12,6 @@ export class CreateUserDto {
   password: string;
 
   @IsString()
+  @ValidateNested()
   address?: CreateAddressDto;
 }
