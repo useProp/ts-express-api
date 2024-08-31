@@ -41,6 +41,10 @@ class App {
     this.app.use(errorMiddleware);
   }
 
+  public getServer() {
+    return this.app;
+  }
+
   public listen() {
     this.app.listen(this.port, () => {
       console.log(`Server running on port: ${this.port}`);

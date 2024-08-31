@@ -42,8 +42,9 @@ export class AuthService {
     delete newUser.password;
 
     const token = this.generateToken({ id: newUser.id });
+    const cookie = this.createCookie({ token, expiresIn: 60 });
 
-    return { newUser, token };
+    return { newUser, token, cookie };
   }
 
   public generateToken = (payload: any): string => {

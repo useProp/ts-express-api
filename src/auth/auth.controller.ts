@@ -36,10 +36,11 @@ export class AuthController implements Controller {
 
   private register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { newUser, token } = await this.authService.register(req.body);
-
+      const { newUser, token, cookie } = await this.authService.register(req.body);
+      res.setHeader('Set-Cookie', [cookie]);
       res.json({ newUser, token });
     } catch (e) {
+      console.log(e);
       next(new HttpException(e?.status, e?.message));
     }
   }
